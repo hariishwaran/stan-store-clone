@@ -24,6 +24,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ sessionId: session.id })
   } catch (error) {
     console.error('Error creating checkout session:', error)
+    
+    // Handle Stripe not configured error
+    if (error instanceof Error && error.message === 'Stripe is not configured') {
+      return NextResponse.json(
+        { error: 'Payment system not configured' },
+        { status: 503 }
+      )
+    }
+    
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }

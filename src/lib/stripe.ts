@@ -2,12 +2,14 @@ import { loadStripe } from '@stripe/stripe-js'
 import Stripe from 'stripe'
 
 // Client-side Stripe
-export const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!)
+export const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
 
-// Server-side Stripe
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-06-30.basil',
-})
+// Server-side Stripe - only initialize if secret key is available
+export const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-06-30.basil',
+    })
+  : null
 
 // Types for Stripe products and prices
 export interface StripeProduct {
@@ -44,6 +46,10 @@ export const createCheckoutSession = async (params: {
   customerEmail?: string
   metadata?: Record<string, string>
 }) => {
+  if (!stripe) {
+    throw new Error('Stripe is not configured')
+  }
+  
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
@@ -70,6 +76,10 @@ export const createSubscription = async (params: {
   cancelUrl: string
   metadata?: Record<string, string>
 }) => {
+  if (!stripe) {
+    throw new Error('Stripe is not configured')
+  }
+  
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'],
     line_items: [
