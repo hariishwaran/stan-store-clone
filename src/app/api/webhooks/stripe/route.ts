@@ -21,6 +21,13 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  if (!supabase) {
+    return NextResponse.json(
+      { error: 'Database is not configured' },
+      { status: 503 }
+    )
+  }
+
   let event: Stripe.Event
 
   try {
