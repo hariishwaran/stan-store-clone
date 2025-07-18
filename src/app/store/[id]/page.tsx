@@ -51,7 +51,7 @@ const sampleProducts = [
   },
 ]
 
-export default function StorePage({ params }: { params: { id: string } }) {
+export default function StorePage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Store Header */}
@@ -73,7 +73,7 @@ export default function StorePage({ params }: { params: { id: string } }) {
             <ProductCard
               key={product.id}
               product={product}
-              storeId={params.id}
+              storeId="sample"
             />
           ))}
         </div>
