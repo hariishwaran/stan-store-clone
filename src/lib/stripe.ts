@@ -1,33 +1,55 @@
-import { loadStripe } from '@stripe/stripe-js'
-import Stripe from 'stripe'
+// Mock Stripe client for development without Stripe
+export const stripePromise = Promise.resolve({
+  redirectToCheckout: async () => ({ error: null }),
+  confirmPayment: async () => ({ error: null }),
+  confirmCardPayment: async () => ({ error: null })
+});
 
-// Client-side Stripe
-export const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
-
-// Server-side Stripe - only initialize if secret key is available
-export const stripe = process.env.STRIPE_SECRET_KEY 
-  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2025-06-30.basil',
+export const stripe = {
+  checkout: {
+    sessions: {
+      create: async () => ({
+        id: 'mock_session_123',
+        url: 'https://example.com/mock-checkout'
+      })
+    }
+  },
+  webhooks: {
+    constructEvent: () => ({
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'mock_session_123',
+          customer_email: 'customer@example.com',
+          amount_total: 2000,
+          metadata: {}
+        }
+      }
     })
-  : null
+  }
+};
 
 // Types for Stripe products and prices
 export interface StripeProduct {
   id: string
   name: string
   description: string | null
-  images: string[]
-  metadata: Record<string, string>
+  active: boolean
+  created: number
+  updated: number
 }
 
 export interface StripePrice {
   id: string
-  product_id: string
+  product: string
   active: boolean
   currency: string
-  unit_amount: number | null
-  recurring: Stripe.Price.Recurring | null
-  metadata: Record<string, string>
+  unit_amount: number
+  recurring: {
+    interval: string
+    interval_count: number
+  } | null
+  created: number
 }
 
 // Helper function to format price
@@ -46,26 +68,10 @@ export const createCheckoutSession = async (params: {
   customerEmail?: string
   metadata?: Record<string, string>
 }) => {
-  if (!stripe) {
-    throw new Error('Stripe is not configured')
+  return {
+    id: 'mock_session_123',
+    url: 'https://example.com/mock-checkout'
   }
-  
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price: params.priceId,
-        quantity: 1,
-      },
-    ],
-    mode: 'payment',
-    success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
-    customer_email: params.customerEmail,
-    metadata: params.metadata,
-  })
-
-  return session
 }
 
 // Helper function to create subscription
@@ -76,24 +82,8 @@ export const createSubscription = async (params: {
   cancelUrl: string
   metadata?: Record<string, string>
 }) => {
-  if (!stripe) {
-    throw new Error('Stripe is not configured')
+  return {
+    id: 'mock_subscription_123',
+    url: 'https://example.com/mock-subscription'
   }
-  
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: [
-      {
-        price: params.priceId,
-        quantity: 1,
-      },
-    ],
-    mode: 'subscription',
-    success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
-    customer: params.customerId,
-    metadata: params.metadata,
-  })
-
-  return session
 } 

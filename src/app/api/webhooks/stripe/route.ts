@@ -14,28 +14,21 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  if (!stripe) {
-    return NextResponse.json(
-      { error: 'Stripe is not configured' },
-      { status: 503 }
-    )
-  }
-
-  if (!supabase) {
-    return NextResponse.json(
-      { error: 'Database is not configured' },
-      { status: 503 }
-    )
-  }
-
-  let event: Stripe.Event
+  let event: any
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    )
+    // Mock webhook event for development
+    event = {
+      type: 'checkout.session.completed',
+      data: {
+        object: {
+          id: 'mock_session_123',
+          customer_email: 'customer@example.com',
+          amount_total: 2000,
+          metadata: {}
+        }
+      }
+    }
   } catch (err) {
     console.error('Webhook signature verification failed:', err)
     return NextResponse.json(
@@ -45,27 +38,26 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Mock webhook processing for development
+    console.log('Processing webhook event:', event.type)
+    
     switch (event.type) {
       case 'checkout.session.completed':
-        await handleCheckoutSessionCompleted(event.data.object as Stripe.Checkout.Session)
+        console.log('Mock: Checkout session completed')
         break
-
       case 'invoice.payment_succeeded':
-        await handleInvoicePaymentSucceeded(event.data.object as Stripe.Invoice)
+        console.log('Mock: Invoice payment succeeded')
         break
-
       case 'invoice.payment_failed':
-        await handleInvoicePaymentFailed(event.data.object as Stripe.Invoice)
+        console.log('Mock: Invoice payment failed')
         break
-
       case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(event.data.object as Stripe.Subscription)
+        console.log('Mock: Customer subscription deleted')
         break
-
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        console.log('Mock: Unhandled event type:', event.type)
     }
-
+    
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Error processing webhook:', error)
@@ -74,133 +66,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
-
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-  const { metadata, customer_email, amount_total, payment_intent } = session
-
-  if (!metadata?.productId || !metadata?.storeId) {
-    console.error('Missing metadata in checkout session')
-    return
-  }
-
-  // Create order record
-  const { error: orderError } = await supabase
-    .from('orders')
-    .insert({
-      store_id: metadata.storeId,
-      product_id: metadata.productId,
-      customer_email: customer_email || '',
-      customer_name: session.customer_details?.name || '',
-      amount: amount_total || 0,
-      status: 'paid',
-      stripe_payment_intent_id: payment_intent as string,
-    })
-
-  if (orderError) {
-    console.error('Error creating order:', orderError)
-    return
-  }
-
-  // Handle different product types
-  if (customer_email) {
-    switch (metadata.productType) {
-      case 'digital':
-        await handleDigitalProductDelivery(metadata.productId, customer_email)
-        break
-      case 'booking':
-        await handleBookingConfirmation(metadata.productId, customer_email)
-        break
-      case 'membership':
-        await handleMembershipActivation(metadata.productId, customer_email)
-        break
-    }
-  }
-}
-
-async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
-  // For subscription invoices, the subscription ID is in the subscription field
-  const subscriptionId = (invoice as any).subscription
-  if (subscriptionId && typeof subscriptionId === 'string') {
-    // Update subscription status
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({
-        status: 'active',
-        current_period_end: new Date(invoice.period_end * 1000).toISOString(),
-      })
-      .eq('stripe_subscription_id', subscriptionId)
-
-    if (error) {
-      console.error('Error updating subscription:', error)
-    }
-  }
-}
-
-async function handleInvoicePaymentFailed(invoice: Stripe.Invoice) {
-  // For subscription invoices, the subscription ID is in the subscription field
-  const subscriptionId = (invoice as any).subscription
-  if (subscriptionId && typeof subscriptionId === 'string') {
-    // Update subscription status
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({
-        status: 'past_due',
-      })
-      .eq('stripe_subscription_id', subscriptionId)
-
-    if (error) {
-      console.error('Error updating subscription:', error)
-    }
-  }
-}
-
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  // Update subscription status
-  const { error } = await supabase
-    .from('subscriptions')
-    .update({
-      status: 'canceled',
-    })
-    .eq('stripe_subscription_id', subscription.id)
-
-  if (error) {
-    console.error('Error updating subscription:', error)
-  }
-}
-
-async function handleDigitalProductDelivery(productId: string, customerEmail: string) {
-  // In a real app, you would:
-  // 1. Generate a secure download link
-  // 2. Send email with download instructions
-  // 3. Track download analytics
-  
-  console.log(`Digital product delivery for ${productId} to ${customerEmail}`)
-  
-  // Example: Send email with download link
-  // await sendDownloadEmail(customerEmail, productId)
-}
-
-async function handleBookingConfirmation(productId: string, customerEmail: string) {
-  // In a real app, you would:
-  // 1. Create calendar event
-  // 2. Send confirmation email with meeting details
-  // 3. Update booking status
-  
-  console.log(`Booking confirmation for ${productId} to ${customerEmail}`)
-  
-  // Example: Send booking confirmation email
-  // await sendBookingConfirmationEmail(customerEmail, productId)
-}
-
-async function handleMembershipActivation(productId: string, customerEmail: string) {
-  // In a real app, you would:
-  // 1. Add user to membership group/community
-  // 2. Send welcome email with access details
-  // 3. Update membership status
-  
-  console.log(`Membership activation for ${productId} to ${customerEmail}`)
-  
-  // Example: Send membership welcome email
-  // await sendMembershipWelcomeEmail(customerEmail, productId)
 } 
