@@ -1,11 +1,34 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-export const supabase = supabaseUrl && supabaseAnonKey 
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null
+// Mock Supabase client for development without database
+export const supabase = {
+  auth: {
+    signUp: async () => ({ data: { user: { id: 'mock-user-1', email: 'user@example.com' } }, error: null }),
+    signInWithPassword: async () => ({ data: { user: { id: 'mock-user-1', email: 'user@example.com' } }, error: null }),
+    signOut: async () => ({ error: null }),
+    getSession: async () => ({ data: { session: null }, error: null }),
+    onAuthStateChange: (callback: any) => {
+      // Mock auth state change - start with no user
+      callback('SIGNED_OUT', null);
+      return { data: { subscription: { unsubscribe: () => {} } } };
+    }
+  },
+  from: () => ({
+    select: () => ({
+      eq: () => ({
+        single: async () => ({ data: null, error: null }),
+        then: async (callback: any) => callback({ data: [], error: null })
+      }),
+      then: async (callback: any) => callback({ data: [], error: null })
+    }),
+    insert: () => ({
+      select: async () => ({ data: null, error: null })
+    }),
+    update: () => ({
+      eq: () => ({
+        then: async (callback: any) => callback({ data: null, error: null })
+      })
+    })
+  })
+};
 
 // Database types
 export interface Database {
@@ -20,17 +43,17 @@ export interface Database {
           avatar_url: string | null
           custom_domain: string | null
           stripe_account_id: string | null
-          created_at: string
+          created_at: string | null
         }
         Insert: {
-          id: string
+          id?: string
           username?: string | null
           display_name?: string | null
           bio?: string | null
           avatar_url?: string | null
           custom_domain?: string | null
           stripe_account_id?: string | null
-          created_at?: string
+          created_at?: string | null
         }
         Update: {
           id?: string
@@ -40,74 +63,74 @@ export interface Database {
           avatar_url?: string | null
           custom_domain?: string | null
           stripe_account_id?: string | null
-          created_at?: string
+          created_at?: string | null
         }
       }
       stores: {
         Row: {
           id: string
           user_id: string
-          name: string
+          name: string | null
           description: string | null
-          theme: any
-          settings: any
-          is_published: boolean
-          created_at: string
+          theme: any | null
+          settings: any | null
+          is_published: boolean | null
+          created_at: string | null
         }
         Insert: {
           id?: string
           user_id: string
-          name: string
+          name?: string | null
           description?: string | null
-          theme?: any
-          settings?: any
-          is_published?: boolean
-          created_at?: string
+          theme?: any | null
+          settings?: any | null
+          is_published?: boolean | null
+          created_at?: string | null
         }
         Update: {
           id?: string
           user_id?: string
-          name?: string
+          name?: string | null
           description?: string | null
-          theme?: any
-          settings?: any
-          is_published?: boolean
-          created_at?: string
+          theme?: any | null
+          settings?: any | null
+          is_published?: boolean | null
+          created_at?: string | null
         }
       }
       products: {
         Row: {
           id: string
           store_id: string
-          name: string
+          name: string | null
           description: string | null
-          price: number
-          type: string
-          settings: any
-          is_active: boolean
-          created_at: string
+          price: number | null
+          type: string | null
+          settings: any | null
+          is_active: boolean | null
+          created_at: string | null
         }
         Insert: {
           id?: string
           store_id: string
-          name: string
+          name?: string | null
           description?: string | null
-          price: number
-          type: string
-          settings?: any
-          is_active?: boolean
-          created_at?: string
+          price?: number | null
+          type?: string | null
+          settings?: any | null
+          is_active?: boolean | null
+          created_at?: string | null
         }
         Update: {
           id?: string
           store_id?: string
-          name?: string
+          name?: string | null
           description?: string | null
-          price?: number
-          type?: string
-          settings?: any
-          is_active?: boolean
-          created_at?: string
+          price?: number | null
+          type?: string | null
+          settings?: any | null
+          is_active?: boolean | null
+          created_at?: string | null
         }
       }
     }

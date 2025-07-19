@@ -10,11 +10,7 @@ const sampleProducts = [
     description: 'Learn photography from basics to advanced techniques. Includes 20+ video lessons, assignments, and lifetime access.',
     price: 9900, // $99.00
     type: 'digital' as const,
-    image_url: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&h=300&fit=crop',
-    settings: {
-      file_size: '2.5 GB',
-      lessons: 20,
-    },
+    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=400&h=300&fit=crop',
   },
   {
     id: 'prod_2',
@@ -22,11 +18,7 @@ const sampleProducts = [
     description: 'Get personalized coaching for your business or personal goals. 60-minute session via Zoom.',
     price: 15000, // $150.00
     type: 'booking' as const,
-    image_url: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
-    settings: {
-      duration: 60,
-      platform: 'Zoom',
-    },
+    image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
   },
   {
     id: 'prod_3',
@@ -34,20 +26,15 @@ const sampleProducts = [
     description: 'Join our exclusive community. Get access to weekly live calls, resources, and networking opportunities.',
     price: 4900, // $49.00
     type: 'membership' as const,
-    image_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
-    settings: {
-      billing_cycle: 'Monthly',
-      features: ['Live calls', 'Resources', 'Community'],
-    },
+    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
   },
   {
     id: 'prod_4',
     name: 'Custom Brand Package',
     description: 'Need something specific? Let\'s discuss your requirements and create a custom solution.',
-    price: 0,
+    price: 50000, // $500.00
     type: 'custom' as const,
-    image_url: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
-    settings: {},
+    image: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop',
   },
 ]
 
