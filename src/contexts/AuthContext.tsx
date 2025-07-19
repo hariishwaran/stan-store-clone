@@ -1,12 +1,17 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { User, Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+
+// Simple mock user type
+interface MockUser {
+  id: string
+  email: string
+  username?: string
+}
 
 interface AuthContextType {
-  user: User | null
-  session: Session | null
+  user: MockUser | null
+  session: any | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, username: string) => Promise<void>
@@ -16,54 +21,60 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [session, setSession] = useState<Session | null>(null)
+  const [user, setUser] = useState<MockUser | null>(null)
+  const [session, setSession] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      setUser(session?.user ?? null)
+    // Simulate initial auth check
+    setTimeout(() => {
       setLoading(false)
-    })
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    }, 1000)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    if (error) throw error
+    // Mock sign in - always succeeds
+    const mockUser: MockUser = {
+      id: 'mock-user-1',
+      email: email,
+      username: email.split('@')[0]
+    }
+    
+    setUser(mockUser)
+    setSession({ user: mockUser })
+    
+    // Simulate redirect to dashboard
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 1000)
   }
 
   const signUp = async (email: string, password: string, username: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-        },
-      },
-    })
-    if (error) throw error
+    // Mock sign up - always succeeds
+    const mockUser: MockUser = {
+      id: 'mock-user-1',
+      email: email,
+      username: username
+    }
+    
+    setUser(mockUser)
+    setSession({ user: mockUser })
+    
+    // Simulate redirect to dashboard
+    setTimeout(() => {
+      window.location.href = '/dashboard'
+    }, 1000)
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    // Mock sign out
+    setUser(null)
+    setSession(null)
+    
+    // Simulate redirect to home
+    setTimeout(() => {
+      window.location.href = '/'
+    }, 500)
   }
 
   const value = {
