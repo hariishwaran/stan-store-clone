@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // Simple mock user type
 interface MockUser {
@@ -24,12 +25,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<MockUser | null>(null)
   const [session, setSession] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
+  const router = useRouter()
 
   useEffect(() => {
-    // Simulate initial auth check
-    setTimeout(() => {
-      setLoading(false)
-    }, 1000)
+    // Check if user is stored in localStorage
+    const storedUser = localStorage.getItem('mockUser')
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser)
+      setUser(parsedUser)
+      setSession({ user: parsedUser })
+    }
+    setLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -43,10 +49,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(mockUser)
     setSession({ user: mockUser })
     
-    // Simulate redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/dashboard'
-    }, 1000)
+    // Store user in localStorage for persistence
+    localStorage.setItem('mockUser', JSON.stringify(mockUser))
+    
+    // Use Next.js router for navigation
+    router.push('/dashboard')
   }
 
   const signUp = async (email: string, password: string, username: string) => {
@@ -60,10 +67,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(mockUser)
     setSession({ user: mockUser })
     
-    // Simulate redirect to dashboard
-    setTimeout(() => {
-      window.location.href = '/dashboard'
-    }, 1000)
+    // Store user in localStorage for persistence
+    localStorage.setItem('mockUser', JSON.stringify(mockUser))
+    
+    // Use Next.js router for navigation
+    router.push('/dashboard')
   }
 
   const signOut = async () => {
@@ -71,10 +79,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setSession(null)
     
-    // Simulate redirect to home
-    setTimeout(() => {
-      window.location.href = '/'
-    }, 500)
+    // Clear localStorage
+    localStorage.removeItem('mockUser')
+    
+    // Use Next.js router for navigation
+    router.push('/')
   }
 
   const value = {
